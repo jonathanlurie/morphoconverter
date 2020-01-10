@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+
+"""
+    - This file does not have a .py extension because it looks nicer without
+    - This file starts with the shebang #!/usr/bin/env python3 , this means you can call it
+      without prepending with "python " - ONLY IF THE FILE IS EXECUTABLE
+    - This file is made executable with the command chmod 700 morphoconverter
+
+
+"""
+
+
+import os
+import subprocess
+import argparse
+
+available_formats = [
+    "MorphML",
+    "NeurolucidaASC",
+    "NeurolucidaDAT",
+    "NeurolucidaClassic",
+    "ArborVitae",
+    "SWC",
+    "NeuroZoom",
+    "NINDS3D",
+    "Oxford",
+    "Eutectics",
+    "Douglas3D",
+    "Nevin",
+    "MaxSim",
+    "NeuronNTSCable",
+    "NeuronSWC2HOC",
+    "NeuronGeneric",
+    "Genesis",
+    "Glasgow",
+    "GulyasTree",
+    "LNeuronAmiraMesh"
+]
+
+
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Converts batches of morphologies into diferent formats.")
+    parser.add_argument("-f", required=True, nargs='+', dest="input_files", help="Input morphology files")
+    parser.add_argument("-ext-out", required=True, dest="ext_out", help="The output file extension")
+    parser.add_argument("-format", required=True, dest="format", choices=available_formats, help="The output format")
+    args = vars(parser.parse_args())
+
+    try:
+        devnull = open(os.devnull, 'w')
+        subprocess.run(["NLMorphologyConverter", "--help"], stdout=devnull, stderr=devnull)
+    except FileNotFoundError as e:
+        print("❌ The tool NLMorphologyConverter must be in your PATH variable")
+        exit(1)
+
+
+    extension_out = args['ext_out']
+    format = args["format"]
+    counter = 0
+    total = len(args["input_files"])
+
+    print(total, "files to process...")
+
+    for f in args["input_files"]:
+        counter += 1
+        progress = "[" + str(counter) + "/" + str(total) + "]"
+
+        if os.path.isfile(f):
+            outfilepath = f[:f.rfind(".")] + "." + extension_out
+            completed_process = subprocess.run(["NLMorphologyConverter", f, "--export", outfilepath, format])
+            if completed_process.returncode:
+                print("❌ Could not convert the file", f, progress)
+            else:
+                print("✅", outfilepath, progress)
+        else:
+            print("❌ The file", f, "does not exist.", progress)
